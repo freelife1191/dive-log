@@ -9,6 +9,6 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConfigurationPropertiesScan
-// @EnableConfigurationProperties({MyServiceProperties.class})
+@EnableConfigurationProperties({ MyServiceProperties.class, SiteProperties.class })
 public class AppConfiguration {
 }

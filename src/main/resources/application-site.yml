@@ -1,0 +1,23 @@
+site:
+  author-name: Freelife
+  author-email: freelife1191@gmail.com
+  
+---
+spring:
+  config:
+    activate:
+      on-profile: "site-local"
+      
+site:
+  author-name: Freelife-local
+  author-email: freelife1191.local@gmail.com
+  
+---
+spring:
+  config:
+    activate:
+      on-profile: "site-dev"
+      
+site:
+  author-name: Freelife-dev
+  author-email: freelife1191.dev@gmail.com

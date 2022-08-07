@@ -7,16 +7,14 @@ import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Created by Kane on 2022/06/06.
- */
-@ActiveProfiles("my-service")
+@ActiveProfiles("dev")
 @SpringBootTest
-class MyServicePropertiesTest {
+class SitePropertiesDevTest {
 
     @Test
-    void test(@Autowired MyServiceProperties myServiceProperties) {
-        assertThat(myServiceProperties.isEnabled()).isFalse();
-        assertThat(myServiceProperties.getSecurity().getUsername()).isEqualTo("freelife");
+    void test(@Autowired SiteProperties siteProperties) {
+        assertThat(siteProperties.getAuthorName()).isEqualTo("Freelife-dev");
+        assertThat(siteProperties.getAuthorEmail()).isEqualTo("freelife1191.dev@gmail.com");
     }
+
 }
