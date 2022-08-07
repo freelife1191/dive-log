@@ -1,6 +1,6 @@
 # Div Log
 
-## SpringApplication 살펴보기
+## 02. SpringApplication 살펴보기
 
 Console에서 Argument 전달 방법
 
@@ -28,7 +28,7 @@ jar파일 실행
 java -jar dive-log-0.0.1-SNAPSHOT.jar --app.name=dive-log-jar
 ```
 
-## 애플리케이션 구성파일 살펴보기
+## 03. 애플리케이션 구성파일 살펴보기
 
 application.yml 무작위값 주입
 
@@ -56,8 +56,8 @@ yaml
 ```yaml
 my:
   servers:
-  - "dev.example.com"
-  - "another.example.com"
+    - "dev.example.com"
+    - "another.example.com"
 ```
 
 타입 세이프한 구성속성 사용방법
@@ -70,8 +70,8 @@ my.service:
     username: Honeymon
     password: password1234
     roles:
-    - USER
-    - MANAGER
+      - USER
+      - MANAGER
   attrs:
     hasWriteAuthority: false
     hasReadAuthority: true
@@ -81,6 +81,7 @@ my.service:
 application.yml 구성속성 값과 일치하는 값을 맵핑함
 
 ```java
+
 @Getter
 @Setter
 @ToString
@@ -89,7 +90,7 @@ public class MyServiceProperties {
     private boolean enabled;
     private InetAddress remoteAddress;
     private final Security security = new Security();
-    
+
     @Getter
     @Setter
     @ToString
@@ -108,6 +109,7 @@ public class MyServiceProperties {
 - `@EnableConfigurationProperties({MyServiceProperties.class})`
 
 ```java
+
 @Configuration
 @ConfigurationPropertiesScan
 // @EnableConfigurationProperties({MyServiceProperties.class})
@@ -115,7 +117,7 @@ public class AppConfiguration {
 }
 ```
 
-## 애플리케이션 구성파일 작성하기
+## 04. 애플리케이션 구성파일 작성하기
 
 ### 스프링 부트 2.4 이전
 
@@ -125,11 +127,11 @@ public class AppConfiguration {
 spring.profiles: "prod"
 ```
 
-2.4 이전에는 profiles와 include를 각각 정의 했었는데 
+2.4 이전에는 profiles와 include를 각각 정의 했었는데
 
 ```properties
-spring.profiles: "debug"
-spring.profiles.include: "debugdb,debugcloud"
+spring.profiles:"debug"
+spring.profiles.include:"debugdb,debugcloud"
 ```
 
 ### 스프링 부트 2.4 이후
@@ -258,23 +260,23 @@ my.service:
 site:
   author-name: Honeymon
   author-email: ihoneymon@gmail.com
-  
+
 ---
 spring:
   config:
     activate:
       on-profile: "site-local"
-      
+
 site:
   author-name: Honeymon-local
   author-email: ihoneymon.local@gmail.com
-  
+
 ---
 spring:
   config:
     activate:
       on-profile: "site-dev"
-      
+
 site:
   author-name: Honeymon-dev
   author-email: ihoneymon.dev@gmail.com
@@ -283,6 +285,7 @@ site:
 ### SiteProperties.java 작성
 
 ```java
+
 @Getter
 @ToString
 @ConfigurationProperties(prefix = "site")
@@ -304,6 +307,7 @@ public class SiteProperties {
 - `AppConfiguration.java`
 
 ```java
+
 @Configuration
 @EnableConfigurationProperties({ SiteProperties.class })
 public class AppConfiguration {
@@ -313,6 +317,7 @@ public class AppConfiguration {
 - `SitePropertiesTest.java`
 
 ```java
+
 @SpringBootTest
 class SitePropertiesTest {
 
@@ -328,6 +333,7 @@ class SitePropertiesTest {
 - `SitePropertiesDevTest.java`
 
 ```java
+
 @ActiveProfiles("dev")
 @SpringBootTest
 class SitePropertiesDevTest {
@@ -340,3 +346,23 @@ class SitePropertiesDevTest {
 
 }
 ```
+
+## 05. 스프링 부트에 적합한 코드 구조 이해하기
+
+커맨드로 build
+
+```bash
+$ ./gradlew clean build
+```
+
+- plain.jar 구조
+
+![plain.jar](./image-ch04/1.png)
+
+- excutable.jar by 스프링 부트
+
+![excutable.jar](./image-ch04/2.png)
+
+- 프로젝트 패키지 구조
+
+![package construct](./image-ch04/3.png)
