@@ -1,7 +1,6 @@
 # Div Log
 
 ## 02. SpringApplication 살펴보기
-
 Console에서 Argument 전달 방법
 
 ```bash
@@ -81,7 +80,6 @@ my.service:
 application.yml 구성속성 값과 일치하는 값을 맵핑함
 
 ```java
-
 @Getter
 @Setter
 @ToString
@@ -90,7 +88,7 @@ public class MyServiceProperties {
     private boolean enabled;
     private InetAddress remoteAddress;
     private final Security security = new Security();
-
+    
     @Getter
     @Setter
     @ToString
@@ -109,7 +107,6 @@ public class MyServiceProperties {
 - `@EnableConfigurationProperties({MyServiceProperties.class})`
 
 ```java
-
 @Configuration
 @ConfigurationPropertiesScan
 // @EnableConfigurationProperties({MyServiceProperties.class})
@@ -118,7 +115,6 @@ public class AppConfiguration {
 ```
 
 ## 04. 애플리케이션 구성파일 작성하기
-
 ### 스프링 부트 2.4 이전
 
 하나의 파일에서 다양한 profiles를 구분짓고 정의를 할 수 있었음
@@ -130,8 +126,8 @@ spring.profiles: "prod"
 2.4 이전에는 profiles와 include를 각각 정의 했었는데
 
 ```properties
-spring.profiles:"debug"
-spring.profiles.include:"debugdb,debugcloud"
+spring.profiles: "debug"
+spring.profiles.include: "debugdb,debugcloud"
 ```
 
 ### 스프링 부트 2.4 이후
@@ -366,3 +362,47 @@ $ ./gradlew clean build
 - 프로젝트 패키지 구조
 
 ![package construct](./image-ch04/3.png)
+
+## 07. 스프링 부트 스타터 살펴보기
+
+Gradle 7 버전대부터 사용가능한 모듈 대체 기능 사용  
+아래와 같이 설정하면 SpringBoot 기본 Tomcat 모듈을 Jetty로 대체되도록 설정할 수 있음
+
+```groovy
+dependencies {
+    modules {
+        module('org.springframework.boot:spring-boot-starter-tomcat') {
+            replacedBy('org.springframework.boot:spring-boot-starter-jetty', '모듈대체기능확인')
+        }
+    }   
+}
+```
+
+## 08. 스프링 프로그래밍 모델이랑 무엇인가
+- 스프링 3개 핵심기술
+  - 의존 관계 주입(Dependency Injection)
+  - 관점 지향 프로그래밍(Aspect Oriented Programming)
+  - 이식 가능한 서비스 추상화(Portable Service Abstraction)
+
+순수 객쳬(POJO): 스프링의 3대 주요 기술이 POJO 프로그래밍 지원  
+스프링 프로그래밍 모델(Spring Programming Model) = 스프링이 제공하는 3가지 기술(DI/IoC, PSA, AOP)을 이용한 프로그래밍 모델
+
+## 09. 스프링 애너테이션 프로그래밍 모델이란 무엇인가
+- 애노테이션 정의
+  - 메타 애노테이션(Meta-Annotation)
+  - 스테레오타입 애노테이션(Stereotype Annotation)
+  - 컴포지드 애노테이션(Composed Annotation)
+
+'역할'과 '행위'를 정의하는데 활용  
+AOP에서 사용하는 이상적인 개입지점
+
+## 10. 스프링 빈과 의존성 주입
+- 의존성 주입(Dependency Injection): 자동와이어링(`@Autowired`)
+  - 필드 의존성 주입: 권장하지 않음 생성자 의존성 주입 방식을 권장 
+  - 설정자(Setter) 의존성 주입
+  - 생성자 의존성 주입: 생성자가 1개만 존재한다면 `@Autowired` 생략가능 (Spring 4.3 버전부터 지원)
+    - 의존성이 주입된 후 불변성을 가진다
+    - 코드가 안전해진다
+    - 코드 설계 시 고민을 강요한다
+      - 생성자 인자가 늘어나면 뭔가 이상함을 느끼기 시작한다
+    - 테스트 하기 좋다
