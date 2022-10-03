@@ -8,10 +8,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(args = {"--app.name=dive-log-test"})
-class DivelogApplicationTests {
-
+public class ApplicationArgumentsTest {
     @Test
-    void contextLoads(@Autowired ApplicationArguments appArguments) {
+    void testApplicationArguments(@Autowired ApplicationArguments appArguments) {
         assertThat(appArguments.getOptionNames()).containsOnly("app.name");
         assertThat(appArguments.getOptionValues("app.name")).containsOnly("dive-log-test");
     }

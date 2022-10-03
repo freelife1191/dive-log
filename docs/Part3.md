@@ -88,7 +88,7 @@ public class MyServiceProperties {
     private boolean enabled;
     private InetAddress remoteAddress;
     private final Security security = new Security();
-    
+
     @Getter
     @Setter
     @ToString
@@ -353,15 +353,15 @@ $ ./gradlew clean build
 
 - plain.jar 구조
 
-![plain.jar](./image-ch04/1.png)
+![plain.jar](./image-part3/1.png)
 
 - excutable.jar by 스프링 부트
 
-![excutable.jar](./image-ch04/2.png)
+![excutable.jar](./image-part3/2.png)
 
 - 프로젝트 패키지 구조
 
-![package construct](./image-ch04/3.png)
+![package construct](./image-part3/3.png)
 
 ## 07. 스프링 부트 스타터 살펴보기
 
@@ -374,35 +374,460 @@ dependencies {
         module('org.springframework.boot:spring-boot-starter-tomcat') {
             replacedBy('org.springframework.boot:spring-boot-starter-jetty', '모듈대체기능확인')
         }
-    }   
+    }
 }
 ```
 
 ## 08. 스프링 프로그래밍 모델이랑 무엇인가
 - 스프링 3개 핵심기술
-  - 의존 관계 주입(Dependency Injection)
-  - 관점 지향 프로그래밍(Aspect Oriented Programming)
-  - 이식 가능한 서비스 추상화(Portable Service Abstraction)
+    - 의존 관계 주입(Dependency Injection)
+    - 관점 지향 프로그래밍(Aspect Oriented Programming)
+    - 이식 가능한 서비스 추상화(Portable Service Abstraction)
 
 순수 객쳬(POJO): 스프링의 3대 주요 기술이 POJO 프로그래밍 지원  
 스프링 프로그래밍 모델(Spring Programming Model) = 스프링이 제공하는 3가지 기술(DI/IoC, PSA, AOP)을 이용한 프로그래밍 모델
 
 ## 09. 스프링 애너테이션 프로그래밍 모델이란 무엇인가
 - 애노테이션 정의
-  - 메타 애노테이션(Meta-Annotation)
-  - 스테레오타입 애노테이션(Stereotype Annotation)
-  - 컴포지드 애노테이션(Composed Annotation)
+    - 메타 애노테이션(Meta-Annotation)
+    - 스테레오타입 애노테이션(Stereotype Annotation)
+    - 컴포지드 애노테이션(Composed Annotation)
 
 '역할'과 '행위'를 정의하는데 활용  
 AOP에서 사용하는 이상적인 개입지점
 
 ## 10. 스프링 빈과 의존성 주입
 - 의존성 주입(Dependency Injection): 자동와이어링(`@Autowired`)
-  - 필드 의존성 주입: 권장하지 않음 생성자 의존성 주입 방식을 권장 
-  - 설정자(Setter) 의존성 주입
-  - 생성자 의존성 주입: 생성자가 1개만 존재한다면 `@Autowired` 생략가능 (Spring 4.3 버전부터 지원)
-    - 의존성이 주입된 후 불변성을 가진다
-    - 코드가 안전해진다
-    - 코드 설계 시 고민을 강요한다
-      - 생성자 인자가 늘어나면 뭔가 이상함을 느끼기 시작한다
-    - 테스트 하기 좋다
+    - 필드 의존성 주입: 권장하지 않음 생성자 의존성 주입 방식을 권장
+    - 설정자(Setter) 의존성 주입
+    - 생성자 의존성 주입: 생성자가 1개만 존재한다면 `@Autowired` 생략가능 (Spring 4.3 버전부터 지원)
+        - 의존성이 주입된 후 불변성을 가진다
+        - 코드가 안전해진다
+        - 코드 설계 시 고민을 강요한다
+            - 생성자 인자가 늘어나면 뭔가 이상함을 느끼기 시작한다
+        - 테스트 하기 좋다
+
+## 11. DiveLog 코드 작성하기
+- Swagger Hub에 작성된 API Documents
+    - https://app.swaggerhub.com/apis-docs/ihoneymon/dive-log/1.0.0
+- dive-log 프로젝트 예제
+    - https://github.com/springrunner/fastcampus-class-201/tree/main/dive-log
+- 테이블 기본키(PK, Primary Key) 선정방식
+    - 자연키: 전화번호, 이메일, 주민번호, 회원번호
+        - 자연키를 기본키로 채택하는 것은 추천하지 않음
+        - 개인정보보호법 영향을 받는다(https://www.privacy.go.kr/nns/ntc/inf/personalInfo.do)
+        - 변경될 수 있다
+    - 대체키: 비즈니스와 상관없는 임의 생성 키
+- DiveResort 구현하기
+- DiveResort 엔티티
+
+### 엔티티 기본키(PK) 자동생성전략
+
+| 전략       | 설명                                                                                             |
+|:---------|------------------------------------------------------------------------------------------------|
+| IDENTITY | 키 생성을 데이터베이스에 위임<br/>(ID값을 null로 전달하면 DB에서 자동증가된 값을 제공)                                        |
+| SEQUENCE | 데이터베이스 Squence 개체를 사용하여 자동생성된 숫자를 활용한다                                                         |
+| TABLE    | 키 생성 전용 테이블을 만들어 데이터베이스 시퀀스 개체를 흉내내는 전략                                                        |
+| AUTO     | 방언(Dialect)에서 적절한 방식을 선택해서 사용<br/>*스프링 부트 2.0 부터 사용한 Hibernate 5.0 부터 IDENTITY에서 TABLE 방식으로 변경 |
+
+### 기본 키 생성전략 IDENTITY 사용
+
+```java
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
+```
+
+하이버 네이트 새로운 ID 생성전략 비활성화
+
+```properties
+spring.jpa.hibernate.use-new-id-generator-mappings: false
+```
+
+### `@Transactional(readOnly)`를 이용한 Reader/Writer 라우팅
+
+https://vladmihalcea.com/read-write-read-only-transaction-routing-spring/
+
+```java
+@Service
+public class DiveResortManager implements DiveResortEditor, DiveResortFinder {
+    //코드 생략  
+    @Transactional(readOnly = true)
+    @Override
+    public List<DiveResortDto> findAll() {
+        return repository.findAll().stream()
+                .map(DiveResortDto::ofEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Optional<DiveResortDto> findByDiveResortId(Long diveResortId) {
+        return repository.findById(diveResortId).map(DiveResortDto::ofEntity);
+    }
+    //코드생략
+}
+```
+
+### Bean validation 추가
+
+https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.3-Release-Notes#validation-starter-no-longer-included-in-web-starters
+
+스프링 부트 2.3부터 애플리케이션에서 검증(validation)을 이용하려면
+spring-boot-starter-validation 스타터를 추가해야 한다
+
+- Bean validation 의존성 추가
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-validation</artifactId>
+</dependency>
+```
+
+```groovy
+dependencies {
+    ...
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+}
+```
+
+```java
+@Getter
+public class DiveResortRegisterRequest {
+    @NotEmpty
+    private String name;
+    @NotEmpty
+    private String ownerName;
+    @NotEmpty
+    private String contactNumber;
+    @NotEmpty
+    private String address;
+    @NotEmpty
+    private String description;
+
+    public DiveResortRegisterCommand convertToRegisterCommand() {
+        return DiveResortRegisterCommand.create(getName(), getOwnerName(), getContactNumber(), getAddress(),
+                getDescription());
+    }
+}
+```
+
+## 12. DiveLog 코드 테스트하기
+
+- Spring-boot-starter-test
+- 테스트 슬라이스(Test Slice)
+- 테스트를 통해 DiveLog 기능 구현
+- 테스트로 DiveLog 구현하기
+- DiveLog 생성메서드 테스트 케이스 작성
+- DiveLog 생성메서드 테스트 수행 확인
+- DiveLogRepository 테스트
+- DiveLogManager 테스트하기
+- DiveLogRestController 구현 및 테스트
+
+### 테스트 지원 모듈
+
+https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#features.testing
+
+- 애플리케이션 테스트 지원 모듈
+    - spring-boot-test
+    - spring-boot-test-autoconfigure
+
+### spring-boot-starter-test 스타터
+
+- JUnit 5
+- Spring Test & Spring Boot Test
+- AssertJ
+- Hamcrest
+- Mockito
+- JSONassert
+- JsonPath
+
+### 테스트 슬라이스(Test Slice)
+
+https://spring.io/blog/2016/08/30/custom-test-slice-with-spring-boot-1-4
+
+```java
+@RunWith(SpringRunner.class)
+@WebMvcTest(UserVehicleController.class)
+public class UserVehicleControllerTests {
+
+    @Autowired
+    private MockMvc mvc;
+
+    @MockBean
+    private UserVehicleService userVehicleService;
+
+    @Test
+    public void testExample() throws Exception {
+        given(this.userVehicleService.getVehicleDetails("sboot"))
+                .willReturn(new VehicleDetails("Honda", "Civic"));
+        this.mvc.perform(get("/sboot/vehicle").accept(MediaType.TEXT_PLAIN))
+                .andExpect(status().isOk()).andExpect(content().string("Honda Civic"));
+    }
+
+}
+```
+
+### 테스트 자동구성 애노테이션(spring-boot-test-autoconfigure)
+
+https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#appendix.test-auto-configuration
+
+- `@DataCassandraTest`
+- `@DataCouchbaseTest`
+- `@DataElasticsearchTest`
+- `@DataJdbcTest`
+- `@DataJpaTest`
+- `@DataLdapTest`
+- `@DataMongoTest`
+- `@DataNeo4jTest`
+- `@DataR2dbcTest`
+- `@DataRedisTest`
+- `@GraphQlTest`
+- `@JdbcTest`
+- `@JooqTest`
+- `@JsonTest`
+- `@RestClientTest`
+- `@WebFluxTest`
+- `@WebMvcTest`
+- `@WebServiceClientTest`
+- `@WebServiceServerTest`
+
+### 웹 애플리케이션 계층별 테스트 전략
+
+| 구분         | 설명                                                                                                                                                                        |
+|------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Domain     | - 비즈니스로직 구현<br/>- 단위테스트(Unit test) 수행으로 충분함<br/>- 비즈니스 로직 및 객체변환 정도 테스트                                                                                                   |
+| Repository | - 엔티티(Entity) 객체 사이 연관관계 구성 확인<br/>- Repository 정상 연동 확인<br/>- 통합테스트를 이용해서 Repository 계층 테스트 수행                                                                           |
+| Service    | - 트랜잭션 관리를 주로 하는 계층<br/>- 서비스 계층에서 사용하는 Repository는 Repository 계층 테스트했으니 모킹(Mocking) 혹은 스텁(Stub) 객체로 대체- `@SpringBootTest`를 이용한 통합테스트 수행(트랜잭션 등 확인필요한 경우)                 |
+| Controller | - 사용자 요청을 서비스 계층으로 전달하고 그 결과를 사용자에게 응답하는 모든 과정을 총괄<br/>- 스프링에서 수행하는 모든 부분을 테스트해야하기 때문에 통합테스트 수행<br/>- 요청이 서비스 계층까지 정상적으로 전달 및 처리 확인<br/>- `@SpringBootTest` 및 MockMvc를 이용 |
+
+
+
+###  `@DataJpaTest` 사용시 - H2Database
+
+http://www.h2database.com/javadoc/org/h2/engine/DbSettings.html#databaseToUpper
+
+스프링 부트에서 사용하는 h2database.1.4.200 에서 DATABASE_TO_UPPER가 기본활성화되어 발생
+
+```java
+@DataJpaTest
+// 애노테이션을 선언하여 테스트 데이터베이스 자동구성을 비활성화
+@AutoConfigureTestDatabase(replace = Replace.NONE)
+class DiveLogRepositoryTest {
+    // 코드생략
+}
+```
+
+### 정리
+- spring-boot-starter-test 설명
+- 단위테스트 작성
+- 통합테스트 작성
+
+## 13. 테스트에 대한 이야기
+- 테스트를 해야하는 이유
+- TDD, 단위테스트
+- 통합테스트
+- 테스트 코드를 통해 신뢰도를 높인다
+- 테스트에 따른 진척도
+
+### 참고도서
+- 클린코드
+- 단위테스트
+- 자바와 JUnit을 활용한 실용주의 단위테스트
+
+### `@ActiveProfiles`
+
+클래스레벨에서 `@ActiveProfiles 애노테이션 활용해서 특정 프로파일을 활성화하여 조건 확인 가능
+
+```java
+@ActiveProfiles("dev")
+@SpringBootTest
+class SitePropertiesDevTest {
+
+    @Test
+    void test(@Autowired SiteProperties siteProperties) {
+        assertThat(siteProperties.getAuthorName()).isEqualTo("Honeymon-dev");
+        assertThat(siteProperties.getAuthorEmail()).isEqualTo("ihoneymon.dev@gmail.com");
+    }
+
+}
+```
+
+### 테스트에 따른 진척도
+
+![테스트에 따른 진척도](./image-part3/4.png)
+
+### 좋은 테스트? 잘못된 테스트?
+
+- 백명석 클린코더스
+    - https://www.youtube.com/playlist?list=PLagTY0ogyVkIl2kTr08w-4MLGYWJz7lNK
+- 박재성 TDD 리팩토링
+    - https://www.youtube.com/watch?v=bIeqAlmNRrA
+
+### TDD 3단계
+![TDD 3단계](./image-part3/5.png)
+
+### 단위테스트 3가지 속성
+- 작은 코드 조각(Unit, 단위)을 검증하고
+- 빠르게 수행하고
+- 다른 곳에 영향을 받지 않도록 격리하여 처리하는 **자동화 테스트**
+
+### 단위 테스트 목표
+
+소프트웨어 프로젝트의 지속 가능한 성장을 가능하게 하는 것
+
+### DiveResortTest && Given - When - Then 패턴
+
+```java
+class DiveResortTest {
+    @Test
+    void testCreate() {
+        String name = "동해다이브리조트";
+        String ownerName = "허니몬";
+        String contactNumber = "033-0000-0000";
+        String address = "강원도 동해시 감추...";
+        String description = "동해 어느구석";
+
+        DiveResort diveResort = DiveResort.create(name, ownerName, contactNumber, address, description);
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(diveResort.getName()).isEqualTo(name);
+            softly.assertThat(diveResort.getOwnerName()).isEqualTo(ownerName);
+            softly.assertThat(diveResort.getContactNumber()).isEqualTo(contactNumber);
+            softly.assertThat(diveResort.getAddress()).isEqualTo(address);
+            softly.assertThat(diveResort.getDescription()).isEqualTo(description);
+            softly.assertThat(diveResort.getCreatedDateTime()).isNotNull();
+            softly.assertThat(diveResort.getLastModifiedDateTime()).isNotNull();
+            softly.assertThat(diveResort.getLastModifiedDateTime()).isEqualTo(diveResort.getCreatedDateTime());
+        });
+    }
+}
+```
+
+### 테스트 도구
+Groovy + Spock
+
+### 계층별 테스트
+### 테스트 컨텍스트 파편화
+
+```java
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = Replace.NONE)
+class DiveResortRepositoryTest {
+    @Autowired
+    DiveResortRepository repository;
+}
+```
+
+```java
+@DataJpaTest(properties = {"spring.mvc.format.date=yyyy/MM/dd"})
+@AutoConfigureTestDatabase(replace = Replace.NONE)
+class DiveResortRepositoryTest2 {
+    @Autowired
+    DiveResortRepository repository;
+}
+```
+
+### 사용자 정의 애노테이션 활용하기
+
+```java
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Tag("integration")
+public @interface IntegrationTest {
+}
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = Replace.NONE)
+public @interface InMemoryDataJpaTest {
+}
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@IntegrationTest
+@SpringBootTest
+@AutoConfigureMockMvc
+public @interface IntegrationMockMvcTest {
+}
+```
+
+```java
+@IntegrationTest
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = Replace.NONE)
+class DiveResortRepositoryTest {
+    @Autowired
+    DiveResortRepository repository;
+}
+
+@InMemoryDataJpaTest
+class DiveResortRepositoryTest {
+    @Autowired
+    DiveResortRepository repository;
+}
+```
+
+### Junit `@Tag`를 이용한 단위테스트와 통합테스트 분리
+
+```groovy
+// test 태스크 수행시 integration 태그 제외
+tasks.named('test') {
+    outputs.dir snippetsDir
+    useJUnitPlatform()
+}
+
+// integrationTest 태스크 수행시 integration 태그 수행
+tasks.named('asciidoctor') {
+    inputs.dir snippetsDir
+    configurations 'asciidoctorEx'
+    dependsOn test
+}
+```
+
+```java
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Tag("integration")
+public @interface IntegrationTest {
+}
+```
+
+### 애플리케이션 프로파일별 구성속성 확인
+
+```yaml
+# 애플리케이션 구성속성 정의시 default 값은 아예 넣지 않는 것이 좋다
+site:
+  author-name: Freelife
+  author-email: freelife1191@gmail.com
+  
+---
+spring:
+  config:
+    activate:
+      on-profile: "site-local"
+      
+site:
+  author-name: Freelife-local
+  author-email: freelife1191.local@gmail.com
+  
+---
+spring:
+  config:
+    activate:
+      on-profile: "site-dev"
+      
+site:
+  author-name: Freelife-dev
+  author-email: freelife1191.dev@gmail.com
+```
+
+### 정리
+- 테스트를 해야 하는 이유
+- 테스트를 작성하는 것은 코드에 대한 신뢰를 높이는 행위

@@ -1,7 +1,7 @@
 plugins {
     id 'org.springframework.boot' version '2.7.0'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-    id 'org.asciidoctor.convert' version '1.5.8'
+    id 'org.asciidoctor.jvm.convert' version '3.3.2'
     id 'java'
 }
 
@@ -13,6 +13,7 @@ configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+    asciidoctorEx
 }
 
 repositories {
@@ -26,12 +27,8 @@ ext {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-jetty'
-    modules {
-        module('org.springframework.boot:spring-boot-starter-tomcat') {
-            replacedBy('org.springframework.boot:spring-boot-starter-jetty', '모듈대체기능확인')
-        }
-    }
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.h2database:h2'
@@ -39,14 +36,18 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    asciidoctorEx 'org.springframework.restdocs:spring-restdocs-asciidoctor'
 }
 
+// test 태스크 수행시 integration 태그 제외
 tasks.named('test') {
     outputs.dir snippetsDir
     useJUnitPlatform()
 }
 
+// integrationTest 태스크 수행시 integration 태그 수행
 tasks.named('asciidoctor') {
     inputs.dir snippetsDir
+    configurations 'asciidoctorEx'
     dependsOn test
 }
