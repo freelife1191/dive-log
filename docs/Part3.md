@@ -1127,7 +1127,7 @@ https://github.com/spring-projects/spring-data-commons
 ### CrudRepository
 https://docs.spring.io/spring-data/commons/docs/current/reference/html/#repositories.core-concepts
 
-[CrudRepository](./img6/1.png)
+[CrudRepository](img16/1.png)
 
 ### Spring Data JPA - Entity
 
