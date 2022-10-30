@@ -1288,3 +1288,364 @@ https://github.com/spring-projects/spring-data-commons/wiki/Release-Trains
 ### 정리
 - https://spring.io/projects/spring-data
 - Spring Data Commons
+
+## 17. 데이터 제어 기술 살펴보기 - SQL 편
+- 스프링 SQL Database 지원
+- DataSource 구성
+- JdbcTemplate
+- JPA 및 Spring Data JPA
+- H2 콘솔
+- R2DBC
+
+### 스프링 SQL Database 지원
+https://github.com/spring-projects/spring-framework/blob/main/spring-jdbc/src/main/java/org/springframework/jdbc/core/JdbcTemplate.java
+
+### javax.sql.DataSource
+
+```java
+public interface DataSource extends CommonDataSource, Wrapper {
+
+    Connection getConnection() throws SQLException;
+
+    Connection getConnection(String username, String password) throws SQLException;
+
+    @Override
+    java.io.PrintWriter getLogWriter() throws SQLException;
+
+    @Override
+    void setLogWriter(java.io.PrintWriter out) throws SQLException;
+
+    @Override
+    void setLoginTimeout(int seconds) throws SQLException;
+
+    @Override
+    int getLoginTimeout() throws SQLException;
+
+    // JDBC 4.3
+    default ConnectionBuilder createConnectionBuilder() throws SQLException {
+        throw new SQLFeatureNotSupportedException("createConnectionBuilder not implemented");
+    };
+}
+```
+
+### application-db.yml
+
+```yaml
+---
+spring:
+  config:
+    activate:
+      on-profile: "db-dev"
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+  datasource:
+    hikari:
+      driver-class-name: org.mariadb.jdbc.Driver
+      jdbc-url: jdbc:mysql:aurora://...:3306/divelog
+      username: svc_divelog
+      password: 1234 #TODO Generated
+      maxLifetime: 58000 # 58sec(서버 연결시간보다 짧게, 커넥션풀 타임아웃 3초)
+      connectionTimeout: 3000 # 3sec
+      maximumPoolSize: 10
+      data-source-properties: #https://2ssue.github.io/programming/HikariCP-MySQL/
+        useServerPrepStmts: false
+        rewriteBatchedStatements: true
+        connectionTimeout: 3000
+        socketTimeout: 60000
+        useSSL: false
+```
+
+### DataSource 다중 운영
+https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#howto.data-access.configure-custom-datasource
+
+```java
+@Configuration(proxyBeanMethods = false)
+public class MyCompleteDataSourcesConfiguration {
+
+    @Bean
+    @Primary
+    @ConfigurationProperties("app.datasource.first")
+    public DataSourceProperties firstDataSourceProperties() {
+        return new DataSourceProperties();
+    }
+
+    @Bean
+    @Primary
+    @ConfigurationProperties("app.datasource.first.configuration")
+    public HikariDataSource firstDataSource(DataSourceProperties firstDataSourceProperties) {
+        return firstDataSourceProperties.initializeDataSourceBuilder().type(HikariDataSource.class).build();
+    }
+
+    @Bean
+    @ConfigurationProperties("app.datasource.second")
+    public DataSourceProperties secondDataSourceProperties() {
+        return new DataSourceProperties();
+    }
+
+    @Bean
+    @ConfigurationProperties("app.datasource.second.configuration")
+    public BasicDataSource secondDataSource(
+            @Qualifier("secondDataSourceProperties") DataSourceProperties secondDataSourceProperties) {
+        return secondDataSourceProperties.initializeDataSourceBuilder().type(BasicDataSource.class).build();
+    }
+
+}
+```
+
+### 개발환경 - 인메모리(In-Memory) Database
+
+```yaml
+spring:
+  config:
+    activate:
+      on-profile: "db-local"
+
+  jpa:
+    show-sql: true
+    database-platform: H2
+    hibernate:
+      # create, create-drop, update, none
+      ddl-auto: update
+
+  datasource:
+    hikari:
+      driver-class-name: org.h2.Driver
+      jdbc-url: jdbc:h2:mem://localhost/~/divelog;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;
+      username: sa
+      password:
+```
+
+[스프링 부트에서 지원하는 내장형 데이터베이스](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#data.sql.datasource.embedded)
+
+- [H2](https://www.h2database.com/html/main.html)
+    - 자동종료 비활성화: `DB_CLOSE_ON_EXIT=FALSE`
+- [HSQL](http://hsqldb.org/)
+    - 자동종료 비활성화: `shutdown=true`
+- [Derby](https://db.apache.org/derby/)
+
+### spring.datasource.* 속성
+https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#data.sql.datasource.configuration
+
+```yaml
+spring:
+  datasource:
+    url: "jdbc:h2:mem:divelog;MODE=MySQL;DATABASE_TO_LOWER=true;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;"
+    username: "dbuser"
+    password: "dbpass"
+```
+
+스프링 부트 JDBC 드라이버 클래스 선택전략
+
+1. `spring.datasource.url`
+2. `spring.datasource.driver-class-name`
+
+`spring.datasource.driver-class-name=com.mysql.jdbc.Drive`
+
+### 커넥션 풀(Connection Pool) 사용전략
+https://github.com/spring-projects/spring-boot/blob/main/spring-boot-project/spring-boot-autoconfigure/src/main/java/org/springframework/boot/autoconfigure/jdbc/DataSourceAutoConfiguration.java
+
+```java
+@AutoConfiguration(before = SqlInitializationAutoConfiguration.class)
+@ConditionalOnClass({ DataSource.class, EmbeddedDatabaseType.class })
+@ConditionalOnMissingBean(type = "io.r2dbc.spi.ConnectionFactory")
+@EnableConfigurationProperties(DataSourceProperties.class)
+@Import(DataSourcePoolMetadataProvidersConfiguration.class)
+public class DataSourceAutoConfiguration {
+
+    @Configuration(proxyBeanMethods = false)
+    @Conditional(EmbeddedDatabaseCondition.class)
+    @ConditionalOnMissingBean({DataSource.class, XADataSource.class})
+    @Import(EmbeddedDataSourceConfiguration.class)
+    protected static class EmbeddedDatabaseConfiguration {
+
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    @Conditional(PooledDataSourceCondition.class)
+    @ConditionalOnMissingBean({DataSource.class, XADataSource.class})
+    @Import({DataSourceConfiguration.Hikari.class, DataSourceConfiguration.Tomcat.class,
+            DataSourceConfiguration.Dbcp2.class, DataSourceConfiguration.OracleUcp.class,
+            DataSourceConfiguration.Generic.class, DataSourceJmxConfiguration.class})
+    protected static class PooledDataSourceConfiguration {
+
+    }
+    // 코드 생략
+}
+```
+
+1. HikariCP 를 사용할 수 있으면 사용한다
+2. HikariCP를 사용할 수 없고 톰캣 Pooling DataSource 사용가능하면 사용한다
+3. 없으면 Common DBCP2 를 사용한다
+4. 위 경우가 없으면 Oracle UCP 를 사용한다
+
+https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#data.sql.datasource.connection-pool
+
+### spring-boot-start-jdbc
+https://github.com/spring-projects/spring-boot/blob/main/spring-boot-project/spring-boot-starters/spring-boot-starter-data-jpa/build.gradle
+
+```groovy
+plugins {
+	id "org.springframework.boot.starter"
+}
+
+description = "Starter for using Spring Data JPA with Hibernate"
+
+dependencies {
+	api(project(":spring-boot-project:spring-boot-starters:spring-boot-starter-aop"))
+	api(project(":spring-boot-project:spring-boot-starters:spring-boot-starter-jdbc"))
+	api("org.hibernate.orm:hibernate-core")
+	api("org.springframework.data:spring-data-jpa")
+	api("org.springframework:spring-aspects")
+}
+```
+
+자동구성된 JdbcTemplate, NamedParameterJdbcTemplate 사용가능
+
+https://docs.spring.io/spring-framework/docs/current/reference/html/data-access.html#jdbc
+
+```java
+@AutoConfiguration(after = DataSourceAutoConfiguration.class)
+@ConditionalOnClass({ DataSource.class, JdbcTemplate.class })
+@ConditionalOnSingleCandidate(DataSource.class)
+@EnableConfigurationProperties(JdbcProperties.class)
+@Import({ DatabaseInitializationDependencyConfigurer.class, JdbcTemplateConfiguration.class, NamedParameterJdbcTemplateConfiguration.class })
+public class JdbcTemplateAutoConfiguration {
+}
+```
+
+### JdbcTemplate
+JdbcTemplate 는 spring.jdbc.template.* 속성으로 사용자 정의
+
+https://github.com/spring-projects/spring-boot/blob/main/spring-boot-project/spring-boot-autoconfigure/src/main/java/org/springframework/boot/autoconfigure/jdbc/JdbcTemplateAutoConfiguration.java
+
+```yaml
+spring:
+  jdbc:
+    template:
+      max-rows: 500 # -1은 JDBC 드라이버 기본구성값 이용
+```
+
+### JPA 및 Spring Data JPA
+- `spring-boot-starter-data-jpa` 스타터 의존성
+- [Hibernate](https://hibernate.org/orm/): 가장 유명한 JPA 구현체
+- [Spring Data JPA](https://spring.io/projects/spring-data-jpa): JPA 기반 Repository 구현체 지원
+- Spring ORM: 스프링 프레임워크가 지원하는 ORM 핵심기능 제공
+  - JPA 및 자원관리, DAO(Data Access Object) 구현 및 트랜잭션 전략을 위한 하이버네이트 지원
+
+```
+compileClasspath - Compile classpath for source set 'main'.
++--- org.springframework.boot:spring-boot-starter-data-jpa -> 2.7.0
+|    +--- org.springframework.boot:spring-boot-starter-aop:2.7.0
+|    +--- org.springframework.boot:spring-boot-starter-jdbc:2.7.0
+|    +--- jakarta.transaction:jakarta.transaction-api:1.3.3
+|    +--- jakarta.persistence:jakarta.persistence-api:2.2.3
+|    +--- org.hibernate:hibernate-core:5.6.9.Final
+|    +--- org.springframework.data:spring-data-jpa:2.7.0
+|    |    +--- org.springframework.data:spring-data-commons:2.7.0
+|    |    |    +--- org.springframework:spring-core:5.3.20 (*)
+|    |    |    +--- org.springframework:spring-beans:5.3.20 (*)
+|    |    |    \--- org.slf4j:slf4j-api:1.7.32 -> 1.7.36
+|    |    +--- org.springframework:spring-orm:5.3.20
+|    |    |    +--- org.springframework:spring-jdbc:5.3.20 (*)
+|    |    |    \--- org.springframework:spring-tx:5.3.20 (*)
+|    |    +--- org.springframework:spring-context:5.3.20 (*)
+|    |    +--- org.springframework:spring-aop:5.3.20 (*)
+```
+
+### 엔티티 클래스(Entity class)
+- 전통적인 방식은 persistence.xml 파일에 기술
+- 스프링 부트는 엔티티탐색(EntityScan) 사용하여 persistence.xml 불필요함
+- 다음 애노테이션이 선언되어 있는 클래스를 대상으로 함 
+  - `@Entity`
+  - `@Embeddable`
+  - `@MappedSuperclass`
+- 클래스패스 기준 엔티티클래스 검색
+
+### 엔티티탐색(@EntityScan)
+`@EntityScan` 애노테이션을 이용해서 탐색위치 별도 지정 가능
+
+```java
+//Entity Class 를 적용
+@EntityScan({
+    "com.freelife.divelog.core.divelog.domain",
+    "com.freelife.divelog.core.diveresort.domain"
+    })
+@Configuration
+public class MyJpaConfiguration {
+}
+```
+```java
+//Entity Class 를 적용
+@EntityScan(basePackageClasses = {DiveResort.class, DiveLog.class})
+@Configuration
+public class MyJpaConfiguration {
+}
+```
+
+### 데이터베이스 초기화전략(위험!)
+
+JPA 데이터베이스 초기화 작동결정속성
+
+- `spring.jpa.generate-ddl: boolean`
+-`spring.jpa.hibernate.ddl-auto: enum`
+
+```yaml
+spring:
+  jpa:
+    hibernate:
+      # create, create-drop, update, none
+      ddl-auto: "create-drop"
+```
+
+| enum          | 설명                                                         |
+| ------------- | ------------------------------------------------------------ |
+| `none`        | 아무 작동도 하지 않는다<br />- 내장형 데이터베이스를 사용하는 경우 `create-drop` 방식으로 작동함<br />- 다른 경우는 `none`이 기본속성 |
+| `validate`    | 현재 데이터베이스 스키마와 엔티티가 다른 부분이 있다면 변경점을 출력하고 애플리케이션 종료 |
+| `updaate`     | 변경된 스키마를 DB에 반영                                    |
+| `create`      | SessionFactory가 구동될 때 데이터베이스에 drop을 실행하고 DDL 수행 |
+| `create-drop` | SessionFactory가 구동될 때 create를 실행하고 SessionFactory가 종료될 때 Drop 실행 |
+
+### H2 웹콘솔
+- H2 웹콘솔 활성화 조건
+  - 서블릿 웹애플리케이션 일 때
+  - com.h2database.h2 가 클래스패스에 존재할 경우
+  - 스프링 부트 개발자도구(DevTools)를 사용할 경우
+
+### R2DBC(Reactive Relation Database Connectivity)
+
+https://r2dbc.io/
+
+- 관계형 데이터베이스에서 리액티브 프로그래밍 API를 제대로 활용할 수 있도록 지원  
+- `spring.r2dbc.*` 속성을 이용해서 JDBC의 DataSource 와 유사한 ConnectionFactory 구성 가능
+
+```yaml
+spring:
+  r2dbc:
+    url: "r2dbc:postgresql://localhost/test"
+    username: "dbuser"
+    password: "dbpass"
+```
+
+JDBC 와 유사하게 리액티브에서 사용할 수 있는 내장형 데이터베이스를 자동구성하여 지원
+
+```groovy
+dependencies {
+    runtimeOnly 'io.r2dbc:r2dbc-h2'
+}
+```
+
+### 정리
+- 스프링 SQL Database 지원
+- DataSource 구성
+- JdbcTemplate
+- JPA 및 Spring Data JPA
+- H2 콘솔
+- R2DBC
+
+### 참고
+- [Spring Data Access](https://docs.spring.io/spring-framework/docs/current/reference/html/data-access.html#spring-data-tier)
+- [Spring Data Common](https://docs.spring.io/spring-data/commons/docs/current/reference/html/)
+- [Spring Data JPA](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/)
+- [Spring Boot Data](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#data)
