@@ -1,5 +1,6 @@
 package com.freelife.divelog.core.diveresort.domain;
 
+import com.freelife.divelog.core.common.AbstractEntity;
 import lombok.Getter;
 import org.springframework.util.Assert;
 
@@ -8,10 +9,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
-public class DivePoint {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class DivePoint extends AbstractEntity {
     @JoinColumn(name = "dive_resort_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private DiveResort diveResort;

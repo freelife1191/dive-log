@@ -353,15 +353,15 @@ $ ./gradlew clean build
 
 - plain.jar 구조
 
-![plain.jar](./image-part3/1.png)
+![plain.jar](img5/1.png)
 
 - excutable.jar by 스프링 부트
 
-![excutable.jar](./image-part3/2.png)
+![excutable.jar](img5/2.png)
 
 - 프로젝트 패키지 구조
 
-![package construct](./image-part3/3.png)
+![package construct](img5/3.png)
 
 ## 07. 스프링 부트 스타터 살펴보기
 
@@ -656,7 +656,7 @@ class SitePropertiesDevTest {
 
 ### 테스트에 따른 진척도
 
-![테스트에 따른 진척도](./image-part3/4.png)
+![테스트에 따른 진척도](img5/4.png)
 
 ### 좋은 테스트? 잘못된 테스트?
 
@@ -666,7 +666,7 @@ class SitePropertiesDevTest {
     - https://www.youtube.com/watch?v=bIeqAlmNRrA
 
 ### TDD 3단계
-![TDD 3단계](./image-part3/5.png)
+![TDD 3단계](img5/5.png)
 
 ### 단위테스트 3가지 속성
 - 작은 코드 조각(Unit, 단위)을 검증하고
@@ -806,23 +806,23 @@ public @interface IntegrationTest {
 site:
   author-name: Freelife
   author-email: freelife1191@gmail.com
-  
+
 ---
 spring:
   config:
     activate:
       on-profile: "site-local"
-      
+
 site:
   author-name: Freelife-local
   author-email: freelife1191.local@gmail.com
-  
+
 ---
 spring:
   config:
     activate:
       on-profile: "site-dev"
-      
+
 site:
   author-name: Freelife-dev
   author-email: freelife1191.dev@gmail.com
@@ -951,7 +951,7 @@ public class GlobalErrorHandler extends ResponseEntityExceptionHandler {
 
 ### 리액티브 스택(Reactive Stack) - 웹서버
 - Reactor Netty(https://github.com/reactor/reactor-netty)
-  - spring-boot-starter-webflux
+    - spring-boot-starter-webflux
 - Apache Tomcat(https://tomcat.apache.org/)
 - Eclipse jetty(https://www.eclipse.org/jetty/)
 - JBoss undertow(https://undertow.io/)
@@ -971,10 +971,9 @@ public class GlobalErrorHandler extends ResponseEntityExceptionHandler {
 
 https://app.swaggerhub.com/apis-docs/ihoneymon/dive-log/1.0.0#/
 
-### 웹 클라이언트를 위한 문서 작성하기
 - API 문서 자동화: Spring REST Docs VS Swagger
-  - https://spring.io/projects/spring-restdocs
-  - https://support.smartbear.com/swaggerhub/getting-started/
+    - https://spring.io/projects/spring-restdocs
+    - https://support.smartbear.com/swaggerhub/getting-started/
 
 |   비교   | Spring REST Docs                                             | Swagger                                                      |
 | :------: | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -1028,9 +1027,9 @@ tasks.named('asciidoctor') {
 ```
 
 - Spring REST Docs 3가지 조합
-  - Junit5(TestCode)
-  - MockMvc
-  - Asciidoctor
+    - Junit5(TestCode)
+    - MockMvc
+    - Asciidoctor
 - DivResortRestControllerRestDocsTest
 
 ```
@@ -1069,12 +1068,12 @@ void testGetDiverResorts() throws Exception {
 |  **메이븐**  | src/docs/asciidoc/*.adoc | target/generated-docs/\*.html                                |
 
 - Spring REST Docs: 파일전환(.adoc -> .html)
-  - https://github.com/springrunner/fastcampus-class-201/blob/rest-docs/dive-log/src/docs/asciidoc/index.adoc
-  - .adoc 파일명 그대로 .html 확장자를 가진 파일 생성
-  - index.adoc -> index.html
-  - hello.adoc -> hello.html
+    - https://github.com/springrunner/fastcampus-class-201/blob/rest-docs/dive-log/src/docs/asciidoc/index.adoc
+    - .adoc 파일명 그대로 .html 확장자를 가진 파일 생성
+    - index.adoc -> index.html
+    - hello.adoc -> hello.html
 - 생성된 문서를 패키지
-  - Plain JAR -> Executable JAR
+    - Plain JAR -> Executable JAR
 
 ```groovy
 // 리패키징 태스크
@@ -1086,9 +1085,206 @@ bootJar {
 ```
 
 - 정리
-  - Swagger Vs Spring REST Docs
-  - 상황에 따라 적절한 방식을 선택한다
-  
+    - Swagger Vs Spring REST Docs
+    - 상황에 따라 적절한 방식을 선택한다
+
 - 이슈 (Task :asciidoctor NO-SOURCE 문제해결)
-  - https://sas-study.tistory.com/371
-  - 반드시 `src/docs/asciidoc` 경로에 `index.adoc` 파일을 생성해주어야 한다
+    - https://sas-study.tistory.com/371
+    - 반드시 `src/docs/asciidoc` 경로에 `index.adoc` 파일을 생성해주어야 한다
+
+## 16. 스프링 환경에서 데이터를 대하는 방법
+https://spring.io/projects/spring-data
+
+### 스프링 3대 핵심기술
+- 순수 객체(POJO)
+    - 의존 관계 주입(Dependency injection)
+    - 관점 지향 프로그래밍(Aspect Oriented Programming)
+    - 이식 가능한 서비스 추상화(Portable Service Abstraction)
+
+### Spring Data projects
+https://spring.io/projects/spring-data
+
+### Spring Data 제공 기능
+
+- **Powerful repository and custom object-mapping abstractions**
+    - 리포지토리 및 객체-매핑 추상화 지원
+- **Dynamic query derivation from repository method names**
+    - 리포지토리 메서드명을 통한 동적 쿼리 생성
+- **Implementation domain base classes providing basic properties**
+    - 공통 기본속성을 가진 도메인 구현체 제공
+- **Support for transparent auditing (created, last changed)**
+    - 생성, 최종변경 정보 기능지원
+- **Possibility to integrate custom repository code**
+    - 리포지토리 사용자정의 가능
+- **Easy Spring integration via JavaConfig and custom XML namespaces**
+    - 자바구성 및 XML를 이용한 손쉬운 스프링 통합지원
+- **Advanced integration with Spring MVC controllers**
+    - Spring MVC 컨트롤러와 통합기능 지원
+
+### Spring Data Common - Repository
+https://github.com/spring-projects/spring-data-commons
+
+### CrudRepository
+https://docs.spring.io/spring-data/commons/docs/current/reference/html/#repositories.core-concepts
+
+[CrudRepository](./img6/1.png)
+
+### Spring Data JPA - Entity
+
+```java
+@Getter
+@Entity
+public class DiveResort {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name; // 리조트
+    private String ownerName; // 리조트사장님이
+    private String contactNumber; // 리조트연락처
+    private String address; // 리조트 주소
+    private String description; // 리조트 설명
+    private LocalDateTime createdDateTime; // 생성일시
+    private LocalDateTime lastModifiedDateTime; // 최근변경일시
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(contactNumber, id, name);
+    }
+    // 코드 생략
+}
+```
+
+### Spring Data MongoDB - Document
+
+```java
+@Document
+public class Customer extends AbstractDocument {
+    private String firstname, lastname;
+
+    @Field("email")
+    @Indexed(unique = true)
+    private EmailAddress emailAddress;
+    private Set<Address> addresses = new HashSet<Address>();
+
+    /**
+     * Creates a new {@link Customer} from the given firstname and lastname.
+     *
+     * @param firstname must not be {@literal null} or empty.
+     * @param lastname must not be {@literal null} or empty.
+     */
+    public Customer(String firstname, String lastname) {
+        Assert.hasText(firstname);
+        Assert.hasText(lastname);
+
+        this.firstname = firstname;
+        this.lastname = lastname;
+    }
+    //코드 생략
+}
+```
+
+### Spring Data 예제
+- spring-data-book
+    - https://github.com/spring-projects/spring-data-book
+- spring-data-examples
+    - https://github.com/spring-projects/spring-data-examples
+
+### AbstractEntity
+```java
+@MappedSuperclass
+public class AbstractEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    public Long getId() {
+        return id;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+
+        if (this == obj) {
+            return true;
+        }
+
+        if (this.id == null || obj == null || !(this.getClass().equals(obj.getClass()))) {
+            return false;
+        }
+
+        AbstractEntity that = (AbstractEntity) obj;
+
+        return this.id.equals(that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return id == null ? 0 : id.hashCode();
+    }
+}
+```
+
+### DiveResortRepository
+```java
+public interface DiveResortRepository {
+
+    List<DiveResort> findAll();
+
+    List<DiveResort> findByName(String diveResortName);
+
+    List<DiveResort> findByOwnerName(String diveResortOwnerName);
+
+    Optional<DiveResort> findByContactNumber(String contactNumber);
+
+    Optional<DiveResort> findById(Long id);
+
+    DiveResort save(DiveResort diveResort);
+
+    void delete(DiveResort diveResort);
+
+    void deleteAll();
+}
+```
+
+### DiveResortRepository extends JpaRepository
+```java
+public interface DiveResortRepository extends JpaRepository<DiveResort, Long> {
+    // 코드 생략
+}
+```
+
+### DiveResortJpaRepository
+```java
+public interface DiveResortJpaRepository extends DiveResortRepository, JpaRepository<DiveResort, Long> {
+}
+```
+
+### Spring Data ReleaseTrain
+https://spring.io/blog/2013/02/13/spring-data-release-train-arora-available
+
+|      년도      | 릴리즈 트레인이름 |
+| :------------: | ----------------- |
+|  **2013-02**   | Arora             |
+|  **2014-02**   | Babbage           |
+|  **2014-03**   | Codd              |
+|  **2014-05**   | Dijkstra          |
+|  **2014-09**   | Evans             |
+|  **2015-03**   | Fowler            |
+|  **2015-09**   | Gosling           |
+|  **2016-04**   | Hopper            |
+|  **2017-01**   | Ingalls           |
+|  **2017-10**   | Kay               |
+|  **2018-09**   | Lovelace          |
+|  **2019-10**   | Moore             |
+| **다음 버전?** | Neumann           |
+
+### Release Train Version changes
+https://spring.io/blog/2020/04/30/updates-to-spring-versions#release-train-version-changes
+
+### Spring Data Commons - Release trains
+https://github.com/spring-projects/spring-data-commons/wiki/Release-Trains
+
+### 정리
+- https://spring.io/projects/spring-data
+- Spring Data Commons
