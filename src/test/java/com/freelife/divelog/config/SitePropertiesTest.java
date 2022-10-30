@@ -11,8 +11,8 @@ class SitePropertiesTest {
 
     @Test
     void test(@Autowired SiteProperties siteProperties) {
-        assertThat(siteProperties.getAuthorName()).isEqualTo("Honeymon-local");
-        assertThat(siteProperties.getAuthorEmail()).isEqualTo("ihoneymon.local@gmail.com");
+        assertThat(siteProperties.getAuthorName()).isEqualTo("Freelife-local");
+        assertThat(siteProperties.getAuthorEmail()).isEqualTo("freelife1191.local@gmail.com");
     }
 
 }

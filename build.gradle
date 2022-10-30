@@ -1,8 +1,8 @@
 plugins {
     id 'org.springframework.boot' version '2.7.0'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-    id 'org.asciidoctor.jvm.convert' version '3.3.2'
-    id 'java'
+    id 'org.asciidoctor.jvm.convert' version '3.3.2' //https://docs.spring.io/spring-restdocs/docs/current/reference/html5/#getting-started-build-configuration
+    id 'java' //https://docs.gradle.org/current/userguide/java_plugin.html#java_plugin
 }
 
 group = 'com.freelife'
@@ -27,11 +27,13 @@ ext {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -57,5 +59,12 @@ tasks.register("integrationTest", Test) {
 tasks.named('asciidoctor') {
     inputs.dir snippetsDir
     configurations 'asciidoctorEx'
-    dependsOn test
+    dependsOn integrationTest
+}
+
+bootJar {
+    dependsOn asciidoctor
+    from ("${asciidoctor.outputDir}") { // 패키징!! +_+) 운영환경 배포시에는
+        into 'static/docs'
+    }
 }

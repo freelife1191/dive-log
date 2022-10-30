@@ -13,8 +13,8 @@ class SitePropertiesDevTest {
 
     @Test
     void test(@Autowired SiteProperties siteProperties) {
-        assertThat(siteProperties.getAuthorName()).isEqualTo("Honeymon-dev");
-        assertThat(siteProperties.getAuthorEmail()).isEqualTo("ihoneymon.dev@gmail.com");
+        assertThat(siteProperties.getAuthorName()).isEqualTo("Freelife-dev");
+        assertThat(siteProperties.getAuthorEmail()).isEqualTo("freelife1191.dev@gmail.com");
     }
 
 }

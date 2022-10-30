@@ -965,3 +965,130 @@ public class GlobalErrorHandler extends ResponseEntityExceptionHandler {
 - 서블릿(Servlet) 웹애플리케이션
 - 리액티브(Reactive) 웹애플리케이션
 - 스프링 부트 웹 관련 기술 지원
+
+## 15. 웹 클라이언트를 위한 문서작성하기
+자동화된 테스트를 통해 생성하는 Spring Rest Docs
+
+https://app.swaggerhub.com/apis-docs/ihoneymon/dive-log/1.0.0#/
+
+### 웹 클라이언트를 위한 문서 작성하기
+- API 문서 자동화: Spring REST Docs VS Swagger
+  - https://spring.io/projects/spring-restdocs
+  - https://support.smartbear.com/swaggerhub/getting-started/
+
+|   비교   | Spring REST Docs                                             | Swagger                                                      |
+| :------: | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| **장점** | - [Asciidoctor](https://asciidoctor.org/)를 이용해서 수기로 작성한 문서와 [Spring MVC Test](https://docs.spring.io/spring-framework/docs/current/reference/html/#spring-mvc-test-framework) 수행 산출물로 생성된 스니펫을 조합<br />- 제품 코드에 영향이 없다(테스트 코드를 통해 생성하기 때문에 제품 코드 품질 향상?)<br />- **테스트가 성공해야 문서가 생성**된다<br />- 무료..? 작성자만 고생하면 된다! | - API 직접 호출해볼수 있는 UI화면을 제공한다<br />- Swaager UI에서 제공하는 애노테이션을 이용하여 적용이 쉽다<br />- Swagger Tools(UI, Editor, Codegen 및 Validator)를 이용하여 API 관련 문서 생성이 쉽다 |
+| **단점** | - 적용하기 어렵다<br />- Asciidoctor 문법을 익혀야 한다<br />- Spring MVC 계층 테스트 및 RestDocs 사용법을 익혀야 한다 | - Swagger UI(Springfox-swagger) 사용시 제품 코드에 침투성이 높음<br />- SwaggerHub를 통해 작성한 OpenAPI Specification 의 경우 관리가 소홀할 경우 API와 차이가 발생함<br />- 유료..? |
+
+- build.gradle: asciidoctor 설정
+
+```groovy
+plugins {
+    id 'org.springframework.boot' version '2.7.0'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    // https://docs.spring.io/spring-restdocs/docs/current/reference/html5/#getting-started-build-configuration
+    id 'org.asciidoctor.jvm.convert' version '3.3.2'
+    id 'java' // https://docs.gradle.org/current/userguide/java_plugin.html#java_plugin
+}
+
+configurations {
+    // 생략
+    asciidoctorEx
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('snippetsDir', file("build/generated-snippets"))
+}
+
+dependencies {
+    // 코드 생략
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    asciidoctorEx 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+}
+
+// test 태스크 수행시 integration 태그 제외
+tasks.named('test') {
+    outputs.dir snippetsDir
+    // 생략
+}
+
+tasks.named('asciidoctor') {
+    inputs.dir snippetsDir
+    configurations 'asciidoctorEx'
+    dependsOn test
+}
+```
+
+- Spring REST Docs 3가지 조합
+  - Junit5(TestCode)
+  - MockMvc
+  - Asciidoctor
+- DivResortRestControllerRestDocsTest
+
+```
+@Test
+void testGetDiverResorts() throws Exception {
+        mockMvc.perform(RestDocumentationRequestBuilders.get("/dive-resorts/")
+        .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(MockMvcResultMatchers.status().isOk())
+        .andDo(document("dive-resorts-get-list",
+                Preprocessors.preprocessRequest(prettyPrint()),
+                Preprocessors.preprocessResponse(prettyPrint()),
+                responseFields(fieldWithPath("[].id").description("DiveResortId"),
+                        fieldWithPath("[].name").   description("리조트 이름"),
+                        fieldWithPath("[].address").description("리조트 주소"),
+                        fieldWithPath("[].ownerName").description("리조트소유주이름"),
+                        fieldWithPath("[].contactNumber").description("리조트 연락처"),
+                        fieldWithPath("[].description").description("리조트 설명"),
+                        fieldWithPath("[].createdDateTime").description("생성일시"),
+                        fieldWithPath("[].lastModifiedDateTime").description("최근변경일시"))));
+}
+```
+
+- Spring REST Docs: Snippets 생성위치
+
+|   빌드도구   | 산출물 디렉터리           |
+| :----------: | ------------------------- |
+| **그레이들** | build/generated-snippets  |
+|  **메이븐**  | target/generated-snippets |
+
+- Spring REST Docs: 아스키독 템플릿 및 REST Docs 생성물 위치
+
+|   빌드도구   | 아스키독 파일 위치       | 생성된 파일위치                                              |
+| :----------: | ------------------------ | ------------------------------------------------------------ |
+| **그레이들** | src/docs/asciidoc/*.adoc | build/asciidoc/html5/\*.html<br />build/docs/asciidoc/\*.html |
+|  **메이븐**  | src/docs/asciidoc/*.adoc | target/generated-docs/\*.html                                |
+
+- Spring REST Docs: 파일전환(.adoc -> .html)
+  - https://github.com/springrunner/fastcampus-class-201/blob/rest-docs/dive-log/src/docs/asciidoc/index.adoc
+  - .adoc 파일명 그대로 .html 확장자를 가진 파일 생성
+  - index.adoc -> index.html
+  - hello.adoc -> hello.html
+- 생성된 문서를 패키지
+  - Plain JAR -> Executable JAR
+
+```groovy
+// 리패키징 태스크
+bootJar {
+    from ("${asciidoctor.outputDir}") { // 패키징!! +_+) 운영환경 배포시에는 asciidoctor 태스크를 빼고
+        into 'static/docs'
+    }
+}
+```
+
+- 정리
+  - Swagger Vs Spring REST Docs
+  - 상황에 따라 적절한 방식을 선택한다
+  
+- 이슈 (Task :asciidoctor NO-SOURCE 문제해결)
+  - https://sas-study.tistory.com/371
+  - 반드시 `src/docs/asciidoc` 경로에 `index.adoc` 파일을 생성해주어야 한다
