@@ -831,3 +831,137 @@ site:
 ### 정리
 - 테스트를 해야 하는 이유
 - 테스트를 작성하는 것은 코드에 대한 신뢰를 높이는 행위
+
+
+## 14. 웹 애플리케이션 이야기
+- 서블릿(Servlet) 웹애플리케이션
+- 리액티브(Reactive) 웹애플리케이션
+- 스프링 부트 웹 관련 기술 지원
+
+### Spring Web Stack
+
+https://spring.io/reactive
+
+### 서블릿 스택(Servlet stack)
+
+- 컨테이너
+    - Apache Tomcat(https://tomcat.apache.org/)
+    - Eclipse jetty(https://www.eclipse.org/jetty/)
+    - JBoss Undertow(https://undertow.io/)
+- spring-boot-starter-web
+    - Apache Tomcat(https://tomcat.apache.org/)
+- Spring WebMVC Framework
+    - Spring MVC Framework
+
+### 서블릿 스택(Servlet stack) - WebMVC자동구성
+
+https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#web.servlet.spring-mvc.auto-configuration
+
+- ContentNegotiatingViewResolver(미디어타입에 적절한 뷰리졸버를 찾아서 위임)와 BeanNameViewResolver(뷰 이름과 동일한 빈을 찾아서 뷰로 사용)
+- 정적자원(css, js, 이미지파일) 제공 및 WebJar 지원
+- Converter, GenericConverter 그리고 Formatter 빈 등록
+- HttpMessageConverter 지원
+    - HTTP 요청과 응답을 적절한 형태로 전환하며 기본은 문자열(String) 타입으로 전환함
+- MessageCodesResolver(오류에서 오류메시지를 구성할 때 메시지코드 처리)
+- 정적인 index.html 지원
+- ConfigurableWebBindingInitializer 빈 사용
+
+### 서블릿 스택(Servlet stack) - 자동구성에 추가 구성 얹기
+
+```java
+@Configuration
+public class MyWebMvcConfiguration implements WebMvcConfigurer {
+    // 스프링 부트 WebMVC 자동구성에 구성 추가
+}
+```
+
+### 서블릿 스택(Servlet stack) - 자동구성 비활성화 및 완전제어
+
+```java
+@Configuration
+@EnableWebMvc
+public class MyWebMvcConfiguration {
+
+}
+```
+
+```java
+@Configuration
+public class MyWebMvcConfiguration extends DelegatingWebMvcConfiguration {
+    // 코드 생략
+}
+```
+
+### 서블릿 스택(Servlet stack) - 정적자원 접근
+
+https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#web.servlet.spring-mvc.static-content
+
+- 스프링 부트가 정적자원을 탐색하는 폴더위치
+    - /static
+    - /public
+    - /resources
+- 어드민에서 사용할 떄 활용하기 좋은 정적자원 경로 패턴 변경
+    - `spring.mvc.static-path-pattern: /static/**`
+
+### 서블릿 스택(Servlet stack) - 웰컴페이지 지원
+
+https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#web.servlet.spring-mvc.welcome-page
+
+1. 스프링 부트가 정적자원을 탐색하는 폴더에서 index.html 탐색
+    - /static
+    - /public
+    - /resources
+2. 템플릿파일 index 탐색
+
+### 서블릿 스택(Servlet stack) - 화이트레이블(Whitelable)
+
+https://github.com/spring-projects/spring-boot/blob/main/spring-boot-project/spring-boot-autoconfigure/src/main/java/org/springframework/boot/autoconfigure/web/servlet/error/ErrorMvcAutoConfiguration.java
+
+### 서블릿 스택(Servlet stack) - 오류제어
+
+https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#web.servlet.spring-mvc.error-handling
+
+```java
+@RestController
+public class DiveResortRestController {
+    // 코드 생략
+
+    @ExceptionHandler(DiveResortNotFoundException.class)
+    public ResponseEntity<?> handlerDiveResortNotFoundException(DiveResortNotFoundException drne) {
+        Map<String, Object> errorMap = new HashMap<>();
+        errorMap.put("timeStampe", LocalDateTime.now());
+        errorMap.put("message", drne.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap);
+    }
+}
+```
+
+```java
+@RestControllerAdvice
+public class GlobalErrorHandler extends ResponseEntityExceptionHandler {
+    @ExceptionHandler(DivePointNotFoundException.class)
+    public ResponseEntity<?> handlerDivePointNotFoundException(DivePointNotFoundException ex, WebRequest webRequest) {
+        Map<String, Object> errorMap = new HashMap<>();
+        errorMap.put("timeStampe", LocalDateTime.now());
+        errorMap.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap);
+    }
+}
+```
+
+### 리액티브 스택(Reactive Stack) - 웹서버
+- Reactor Netty(https://github.com/reactor/reactor-netty)
+  - spring-boot-starter-webflux
+- Apache Tomcat(https://tomcat.apache.org/)
+- Eclipse jetty(https://www.eclipse.org/jetty/)
+- JBoss undertow(https://undertow.io/)
+
+### 컨테이너 -> 웹서버
+- 2.0이전: 서블릿컨테이너(ServletContainer)
+- 2.0이후: 리액티브 스택을 추가하며 웹서버(WebServer) 혼용
+- 조금 더?: ServletWebServer & ReactiveWebServer 정돈
+
+### 정리
+- 서블릿(Servlet) 웹애플리케이션
+- 리액티브(Reactive) 웹애플리케이션
+- 스프링 부트 웹 관련 기술 지원

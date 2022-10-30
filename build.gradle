@@ -41,8 +41,16 @@ dependencies {
 
 // test 태스크 수행시 integration 태그 제외
 tasks.named('test') {
+    useJUnitPlatform {
+        excludeTags("integration")
+    }
+}
+
+tasks.register("integrationTest", Test) {
     outputs.dir snippetsDir
-    useJUnitPlatform()
+    useJUnitPlatform {
+        includeTags("integration")
+    }
 }
 
 // integrationTest 태스크 수행시 integration 태그 수행
